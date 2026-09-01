@@ -45,9 +45,9 @@ export default async function SuccessPage({ searchParams }: PageProps<"/success"
           </CardDescription>
         </CardHeader>
         <CardContent className="flex gap-2">
-          <Button render={<Link href="/" />}>Back to the car</Button>
+          <Button nativeButton={false} render={<Link href="/" />}>Back to the car</Button>
           {bid && (
-            <Button variant="secondary" render={<a href={bid.url} target="_blank" rel="noopener noreferrer nofollow" />}>
+            <Button variant="secondary" nativeButton={false} render={<a href={bid.url} target="_blank" rel="noopener noreferrer nofollow" />}>
               Open your link
             </Button>
           )}

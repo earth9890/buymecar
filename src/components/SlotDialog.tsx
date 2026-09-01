@@ -137,6 +137,7 @@ function SlotDialogInner({ slot, devMode, onClose }: Props & { slot: SlotView })
             <Button
               size="sm"
               variant="secondary"
+              nativeButton={false}
               render={<a href={owner.url} target="_blank" rel="noopener noreferrer nofollow" />}
             >
               Visit <ExternalLink className="size-3.5" />
