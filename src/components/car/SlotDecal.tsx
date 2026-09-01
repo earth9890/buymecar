@@ -1,0 +1,114 @@
+"use client";
+
+import { useMemo } from "react";
+import * as THREE from "three";
+import { Text } from "@react-three/drei";
+import type { ThreeEvent } from "@react-three/fiber";
+import type { SlotView } from "@/lib/types";
+import { formatUsd } from "@/lib/pricing";
+import { brandColor, hostOf, readableTextColor } from "./materials";
+
+interface Props {
+  slot: SlotView;
+  hovered: boolean;
+  selected: boolean;
+  onHover: (id: string | null) => void;
+  onSelect: (id: string) => void;
+}
+
+export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props) {
+  const [w, h] = slot.size;
+  const owned = Boolean(slot.owner);
+  const color = owned ? brandColor(slot.owner!.brandName) : "#ffffff";
+  const textColor = owned ? readableTextColor(color) : "#ffffff";
+  const thin = h <= 0.22;
+
+  const edges = useMemo(() => new THREE.EdgesGeometry(new THREE.PlaneGeometry(w, h)), [w, h]);
+
+  const primary = owned ? slot.owner!.brandName.toUpperCase() : "AVAILABLE";
+  const secondary = owned
+    ? slot.owner!.tagline || hostOf(slot.owner!.url)
+    : formatUsd(slot.minBidCents);
+
+  // Font sizing: fit the primary line to the panel width, capped by height.
+  const primarySize = thin
+    ? h * 0.62
+    : Math.min(h * 0.34, (w * 1.55) / Math.max(primary.length, 5));
+  const secondarySize = thin ? h * 0.5 : Math.min(h * 0.2, (w * 1.4) / Math.max(secondary.length, 8));
+
+  const active = hovered || selected;
+
+  return (
+    <group position={slot.position} rotation={slot.rotation}>
+      <mesh
+        onPointerOver={(e: ThreeEvent<PointerEvent>) => {
+          e.stopPropagation();
+          onHover(slot.id);
+        }}
+        onPointerOut={() => onHover(null)}
+        onClick={(e: ThreeEvent<MouseEvent>) => {
+          e.stopPropagation();
+          onSelect(slot.id);
+        }}
+      >
+        <planeGeometry args={[w, h]} />
+        <meshStandardMaterial
+          color={color}
+          transparent={!owned}
+          opacity={owned ? 1 : active ? 0.55 : 0.2}
+          emissive={color}
+          emissiveIntensity={active ? (owned ? 0.5 : 0.35) : owned ? 0.12 : 0.04}
+          roughness={0.55}
+          metalness={0.1}
+          polygonOffset
+          polygonOffsetFactor={-2}
+          side={THREE.FrontSide}
+        />
+      </mesh>
+      <lineSegments geometry={edges} position={[0, 0, 0.002]}>
+        <lineBasicMaterial color={active ? "#ffffff" : owned ? textColor : "#ffffff"} transparent opacity={active ? 1 : 0.55} />
+      </lineSegments>
+
+      {thin ? (
+        <Text
+          position={[0, 0, 0.004]}
+          fontSize={primarySize}
+          maxWidth={w * 0.95}
+          anchorX="center"
+          anchorY="middle"
+          color={textColor}
+          letterSpacing={0.08}
+        >
+          {`${primary}  ·  ${secondary}`}
+        </Text>
+      ) : (
+        <>
+          <Text
+            position={[0, h * 0.12, 0.004]}
+            fontSize={primarySize}
+            maxWidth={w * 0.92}
+            anchorX="center"
+            anchorY="middle"
+            color={textColor}
+            letterSpacing={0.06}
+            textAlign="center"
+          >
+            {primary}
+          </Text>
+          <Text
+            position={[0, -h * 0.22, 0.004]}
+            fontSize={secondarySize}
+            maxWidth={w * 0.9}
+            anchorX="center"
+            anchorY="middle"
+            color={textColor}
+            fillOpacity={0.85}
+            textAlign="center"
+          >
+            {secondary}
+          </Text>
+        </>
+      )}
+    </group>
+  );
+}
