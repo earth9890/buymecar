@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ArrowUpRight, ExternalLink, Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -34,19 +34,19 @@ const ZONE_LABEL: Record<SlotView["zone"], string> = {
 };
 
 export function SlotDialog({ slot, devMode, onClose }: Props) {
+  if (!slot) return <Dialog open={false} />;
+  // Keyed so the form state resets whenever the slot or its floor changes.
+  return <SlotDialogInner key={`${slot.id}:${slot.minBidCents}`} slot={slot} devMode={devMode} onClose={onClose} />;
+}
+
+function SlotDialogInner({ slot, devMode, onClose }: Props & { slot: SlotView }) {
   const [brandName, setBrandName] = useState("");
   const [url, setUrl] = useState("");
   const [tagline, setTagline] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [email, setEmail] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(() => String(slot.minBidCents / 100));
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (slot) setAmount(String(slot.minBidCents / 100));
-  }, [slot]);
-
-  if (!slot) return <Dialog open={false} />;
 
   const owner = slot.owner;
   const minDollars = slot.minBidCents / 100;
@@ -55,7 +55,7 @@ export function SlotDialog({ slot, devMode, onClose }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!slot || !amountOk) return;
+    if (!amountOk) return;
     setSubmitting(true);
     try {
       const res = await fetch("/api/checkout", {
