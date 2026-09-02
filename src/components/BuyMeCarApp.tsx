@@ -176,7 +176,8 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
 
       {/* ================= HERO ================= */}
       <section ref={heroRef} className="relative h-[calc(100dvh-3.5rem)] min-h-[600px] w-full overflow-hidden scroll-mt-14">
-        <div className="absolute inset-0" onPointerDown={() => setWheelZoom(true)}>
+        {/* On wide screens push the car right so the headline has room. */}
+        <div className="absolute inset-0 lg:left-[10%]" onPointerDown={() => setWheelZoom(true)}>
           <CarScene
             slots={data.slots}
             selectedId={selectedId}
