@@ -4,14 +4,15 @@ import type { SlotView } from "@/lib/types";
 export interface SnappedPlacement {
   position: [number, number, number];
   rotation: [number, number, number];
+  /** The mesh the slot landed on; decals are projected onto exactly this mesh. */
+  object: THREE.Mesh;
 }
 
 /**
  * Projects each slot onto the real car surface. For every slot we cast a ray
  * from outside the car along the slot's configured normal; the decal is placed
- * a hair above the first hit and rotated to lie flush with the surface there
- * (keeping the configured "up" so text stays upright). Slots with no hit keep
- * their configured placement.
+ * at the first hit and rotated to lie flush with the surface there (keeping the
+ * configured "up" so text stays upright). Slots with no hit are skipped.
  */
 export function snapSlotsToCar(
   car: THREE.Object3D,
@@ -45,18 +46,26 @@ export function snapSlotsToCar(
     dir.copy(normal).negate();
     raycaster.set(origin, dir);
     raycaster.near = 0;
-    raycaster.far = interior ? 1.7 : 3.6;
+    raycaster.far = interior ? 1.7 : 4.0;
 
-    const hit = raycaster.intersectObject(car, true).find((h) => h.object.visible && h.face);
-    if (!hit || !hit.face) continue;
+    const hits = raycaster
+      .intersectObject(car, true)
+      .filter((h) => h.object.visible && h.face && (h.object as THREE.Mesh).isMesh);
+    if (hits.length === 0) continue;
+    // Badges, emblems and trim sit a few mm proud of the panel they decorate.
+    // Among everything within 4 cm of the first hit, project onto the biggest
+    // mesh so the decal covers the panel, not the ornament.
+    const near = hits.filter((h) => h.distance <= hits[0].distance + 0.04);
+    const hit = near.reduce((best, h) => {
+      const size = (o: THREE.Object3D) => ((o as THREE.Mesh).geometry?.attributes?.position?.count ?? 0);
+      return size(h.object) > size(best.object) ? h : best;
+    }, near[0]);
+    if (!hit.face) continue;
 
-    // World-space surface normal, flipped to face the same way as our ray came from.
     normalMatrix.getNormalMatrix(hit.object.matrixWorld);
     hitNormal.copy(hit.face.normal).applyMatrix3(normalMatrix).normalize();
     if (hitNormal.dot(normal) < 0) hitNormal.negate();
 
-    // Only tilt onto the surface if it is broadly facing our way; otherwise keep
-    // the configured orientation (we probably hit a bracket or an edge).
     const align = s.snap?.align ?? true;
     let rotation: [number, number, number] = s.rotation;
     if (align && hitNormal.dot(normal) > 0.5) {
@@ -70,8 +79,8 @@ export function snapSlotsToCar(
       hitNormal.copy(normal);
     }
 
-    const p = hit.point.clone().addScaledVector(hitNormal, s.snap?.offset ?? 0.01);
-    out[s.id] = { position: [p.x, p.y, p.z], rotation };
+    const p = hit.point.clone().addScaledVector(hitNormal, s.snap?.offset ?? 0.004);
+    out[s.id] = { position: [p.x, p.y, p.z], rotation, object: hit.object as THREE.Mesh };
   }
   return out;
 }

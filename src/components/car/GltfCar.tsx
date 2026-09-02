@@ -130,8 +130,13 @@ export function GltfCar({ url, onLoaded }: Props) {
       // Dev helper: raycast the car from the console to find real surface positions.
       w.__probe = (o, d) => {
         const rc = new THREE.Raycaster(new THREE.Vector3(...(o as [number, number, number])), new THREE.Vector3(...(d as [number, number, number])).normalize(), 0, 10);
-        const h = rc.intersectObject(root, true).find((x) => x.object.visible);
-        return h ? [h.point.x, h.point.y, h.point.z] : null;
+        const h = rc.intersectObject(root, true).find((x) => x.object.visible && x.face);
+        if (!h || !h.face) return null;
+        const n = h.face.normal.clone().applyMatrix3(new THREE.Matrix3().getNormalMatrix(h.object.matrixWorld)).normalize();
+        const mat = (h.object as THREE.Mesh).material;
+        const name = (Array.isArray(mat) ? mat[0] : mat)?.name ?? "";
+        // [x, y, z, nx, ny, nz, materialName]
+        return [h.point.x, h.point.y, h.point.z, n.x, n.y, n.z, name as unknown as number];
       };
     }
     onLoaded?.(root);

@@ -15,6 +15,7 @@ import type { SlotView } from "@/lib/types";
 import { GWagon } from "./GWagon";
 import { GltfCar } from "./GltfCar";
 import { SlotDecal } from "./SlotDecal";
+import { ProjectedDecal } from "./ProjectedDecal";
 import { snapSlotsToCar } from "./snap";
 
 const MODEL_URL = process.env.NEXT_PUBLIC_CAR_MODEL_URL ?? "/models/g63.glb";
@@ -50,10 +51,7 @@ function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
     }
     return result;
   }, [car, slots]);
-  const placed = useMemo(
-    () => slots.map((s) => (snapped[s.id] ? { ...s, ...snapped[s.id] } : s)),
-    [slots, snapped],
-  );
+
   useCursor(hoveredId !== null);
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
 
@@ -91,16 +89,28 @@ function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
 
       <group>
         {USE_GLTF ? <GltfCar url={MODEL_URL} onLoaded={onCarLoaded} /> : <GWagon />}
-        {placed.map((s) => (
-          <SlotDecal
-            key={s.id}
-            slot={s}
-            hovered={hoveredId === s.id}
-            selected={selectedId === s.id}
-            onHover={handleHover}
-            onSelect={onSelect}
-          />
-        ))}
+        {slots.map((s) =>
+          snapped[s.id] ? (
+            <ProjectedDecal
+              key={s.id}
+              slot={s}
+              placement={snapped[s.id]}
+              hovered={hoveredId === s.id}
+              selected={selectedId === s.id}
+              onHover={handleHover}
+              onSelect={onSelect}
+            />
+          ) : USE_GLTF ? null : (
+            <SlotDecal
+              key={s.id}
+              slot={s}
+              hovered={hoveredId === s.id}
+              selected={selectedId === s.id}
+              onHover={handleHover}
+              onSelect={onSelect}
+            />
+          ),
+        )}
       </group>
 
       {/* showroom floor */}
