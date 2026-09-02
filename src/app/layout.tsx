@@ -9,7 +9,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "buymecar.lol — Put your brand on my G-Wagon",
+  title: "buymecar.lol — Put your brand on a real Mercedes-AMG G63",
   description:
     "A scanned Mercedes-AMG G63 with 35 sponsor panels. Buy one, your brand goes on the car and every click goes to your link. Anyone can outbid you for 20% more. When it's funded, I buy the real car.",
   openGraph: {

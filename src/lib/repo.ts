@@ -3,7 +3,7 @@ import { db, ensureDb } from "@/db";
 import { bids, type BidRow } from "@/db/schema";
 import { SLOTS, SLOT_BY_ID } from "./slots-config";
 import { goalCents, minBidCents } from "./pricing";
-import type { SiteStats, SlotOwner, SlotView, SlotsPayload } from "./types";
+import type { ActivityItem, SiteStats, SlotOwner, SlotView, SlotsPayload } from "./types";
 import { isDodoConfigured } from "./dodo";
 
 function toOwner(b: BidRow): SlotOwner {
@@ -15,6 +15,7 @@ function toOwner(b: BidRow): SlotOwner {
     logoUrl: b.logoUrl,
     amountCents: b.amountCents,
     paidAt: b.paidAt ? b.paidAt.getTime() : b.createdAt.getTime(),
+    clicks: b.clicks,
   };
 }
 
@@ -63,9 +64,57 @@ export async function getStats(): Promise<SiteStats> {
   };
 }
 
+/** Latest paid bids, newest first. */
+export async function getActivity(limit = 20): Promise<ActivityItem[]> {
+  await ensureDb();
+  const rows = await db
+    .select()
+    .from(bids)
+    .where(inArray(bids.status, ["paid", "outbid"]))
+    .orderBy(desc(bids.paidAt))
+    .limit(limit * 3);
+  // A bid is a takeover if an earlier paid bid existed on the same slot.
+  const all = await db
+    .select({ id: bids.id, slotId: bids.slotId, paidAt: bids.paidAt })
+    .from(bids)
+    .where(inArray(bids.status, ["paid", "outbid"]));
+  const firstPaid = new Map<string, number>();
+  for (const b of all) {
+    const t = b.paidAt?.getTime() ?? 0;
+    const cur = firstPaid.get(b.slotId);
+    if (cur === undefined || t < cur) firstPaid.set(b.slotId, t);
+  }
+  return rows.slice(0, limit).map((b) => {
+    const t = b.paidAt?.getTime() ?? b.createdAt.getTime();
+    return {
+      bidId: b.id,
+      slotId: b.slotId,
+      slotLabel: SLOT_BY_ID[b.slotId]?.label ?? b.slotId,
+      brandName: b.brandName,
+      url: b.url,
+      amountCents: b.amountCents,
+      paidAt: t,
+      takeover: (firstPaid.get(b.slotId) ?? t) < t,
+      current: b.status === "paid",
+    };
+  });
+}
+
+/** Counts a click-through on an owned slot and returns the destination URL. */
+export async function recordClick(slotId: string): Promise<string | null> {
+  const owners = await getCurrentOwners();
+  const owner = owners.get(slotId);
+  if (!owner) return null;
+  await db
+    .update(bids)
+    .set({ clicks: sql`${bids.clicks} + 1` })
+    .where(eq(bids.id, owner.id));
+  return owner.url;
+}
+
 export async function getSlotsPayload(): Promise<SlotsPayload> {
-  const [slots, stats] = await Promise.all([getSlotViews(), getStats()]);
-  return { slots, stats, devMode: !isDodoConfigured() };
+  const [slots, stats, activity] = await Promise.all([getSlotViews(), getStats(), getActivity(12)]);
+  return { slots, stats, activity, devMode: !isDodoConfigured() };
 }
 
 export async function getBid(id: string): Promise<BidRow | null> {
@@ -111,6 +160,7 @@ export async function createPendingBid(
   const now = new Date();
   const row: BidRow = {
     id,
+    clicks: 0,
     slotId: def.id,
     brandName: input.brandName,
     url: input.url,

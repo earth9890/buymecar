@@ -21,6 +21,7 @@ export const bids = sqliteTable("bids", {
   provider: text("provider").notNull().default("dodo"),
   checkoutSessionId: text("checkout_session_id"),
   paymentId: text("payment_id"),
+  clicks: integer("clicks").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   paidAt: integer("paid_at", { mode: "timestamp_ms" }),
 });

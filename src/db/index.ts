@@ -55,6 +55,12 @@ export function ensureDb(): Promise<void> {
         CREATE INDEX IF NOT EXISTS bids_slot_status_idx ON bids (slot_id, status, amount_cents);
         CREATE INDEX IF NOT EXISTS bids_session_idx ON bids (checkout_session_id);
       `);
+      // Additive migrations for databases created before a column existed.
+      try {
+        await client.execute("ALTER TABLE bids ADD COLUMN clicks INTEGER NOT NULL DEFAULT 0");
+      } catch {
+        /* column already there */
+      }
       const now = Date.now();
       for (const s of SLOTS) {
         await db.run(sql`

@@ -1,52 +1,68 @@
 "use client";
 
-import { Car } from "lucide-react";
+import { Car, Share2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { formatUsd } from "@/lib/pricing";
-import type { SiteStats, SlotView } from "@/lib/types";
-import { HowItWorks } from "./HowItWorks";
-import { Leaderboard } from "./Leaderboard";
+import type { SiteStats } from "@/lib/types";
 
 interface Props {
   stats: SiteStats;
-  slots: SlotView[];
-  onPick: (id: string) => void;
+  watching: number;
+  onShare: () => void;
+  onClaim: () => void;
 }
 
-export function SiteHeader({ stats, slots, onPick }: Props) {
-  const pct = Math.min(100, (stats.raisedCents / stats.goalCents) * 100);
+const NAV = [
+  ["#leaderboard", "Sponsors"],
+  ["#spots", "Spots"],
+  ["#activity", "Activity"],
+  ["#how", "How it works"],
+] as const;
+
+export function SiteHeader({ stats, watching, onShare, onClaim }: Props) {
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-10 p-3 sm:p-5">
-      <div className="pointer-events-auto mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg">
-            <Car className="size-5" />
-          </div>
-          <div>
-            <h1 className="font-heading text-lg leading-none font-bold tracking-tight sm:text-xl">
-              buymecar<span className="text-muted-foreground">.lol</span>
-            </h1>
-            <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-              Put your brand on my future G63. Highest payer keeps the panel.
-            </p>
-          </div>
+    <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#07080b]/75 backdrop-blur-md">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:gap-5">
+        <a href="#top" className="flex items-center gap-2.5">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-gold text-gold-foreground">
+            <Car className="size-4" />
+          </span>
+          <span className="font-heading text-[17px] font-bold tracking-tight">
+            buymecar<span className="text-muted-foreground">.lol</span>
+          </span>
+        </a>
+
+        <div className="hidden items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-xs text-muted-foreground sm:flex">
+          <span className="live-dot size-1.5 rounded-full bg-emerald-400" />
+          <span className="text-foreground">{watching} watching</span>
+          <span className="opacity-40">·</span>
+          <span>
+            {stats.soldCount}/{stats.totalSlots} spots
+          </span>
+          <span className="opacity-40">·</span>
+          <span>{formatUsd(stats.raisedCents)} raised</span>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden min-w-56 rounded-xl border bg-background/70 p-3 backdrop-blur md:block">
-            <div className="flex items-baseline justify-between text-xs text-muted-foreground">
-              <span>Raised</span>
-              <span>{stats.soldCount}/{stats.totalSlots} spots · {stats.takeovers} takeovers</span>
-            </div>
-            <div className="mt-0.5 flex items-baseline justify-between">
-              <span className="font-mono text-lg font-semibold">{formatUsd(stats.raisedCents)}</span>
-              <span className="text-xs text-muted-foreground">of {formatUsd(stats.goalCents, { compact: true })}</span>
-            </div>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-              <div className="h-full rounded-full bg-primary transition-[width] duration-700" style={{ width: `${Math.max(pct, 0.5)}%` }} />
-            </div>
-          </div>
-          <HowItWorks />
-          <Leaderboard slots={slots} onPick={onPick} />
+        <nav className="ml-auto hidden items-center gap-1 md:flex">
+          {NAV.map(([href, label]) => (
+            <a
+              key={href}
+              href={href}
+              className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-white/[0.05] hover:text-foreground"
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="ml-auto flex items-center gap-2 md:ml-2">
+          <Button variant="ghost" size="sm" onClick={onShare} aria-label="Share">
+            <Share2 className="size-4" />
+            <span className="hidden sm:inline">Share</span>
+          </Button>
+          <Button size="sm" onClick={onClaim} className="bg-gold text-gold-foreground hover:bg-gold/90">
+            Claim a spot
+          </Button>
         </div>
       </div>
     </header>

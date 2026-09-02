@@ -8,6 +8,7 @@ export interface SlotOwner {
   logoUrl: string | null;
   amountCents: number;
   paidAt: number;
+  clicks: number;
 }
 
 export interface SlotView extends SlotDef {
@@ -24,8 +25,23 @@ export interface SiteStats {
   takeovers: number;
 }
 
+export interface ActivityItem {
+  bidId: string;
+  slotId: string;
+  slotLabel: string;
+  brandName: string;
+  url: string;
+  amountCents: number;
+  paidAt: number;
+  /** True when this bid replaced a previous paid holder. */
+  takeover: boolean;
+  /** Still the current holder of the slot. */
+  current: boolean;
+}
+
 export interface SlotsPayload {
   slots: SlotView[];
   stats: SiteStats;
+  activity: ActivityItem[];
   devMode: boolean;
 }

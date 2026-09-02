@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { formatUsd } from "@/lib/pricing";
+import { compactNumber, timeAgo } from "@/lib/format";
 import type { SlotView } from "@/lib/types";
 import { brandColor, hostOf } from "@/components/car/materials";
 
@@ -133,14 +134,16 @@ function SlotDialogInner({ slot, devMode, onClose }: Props & { slot: SlotView })
               </div>
             </div>
             <div className="text-right">
-              <div className="text-xs text-muted-foreground">Paid</div>
+              <div className="text-xs text-muted-foreground">
+                {compactNumber(owner.clicks)} clicks · {timeAgo(owner.paidAt)}
+              </div>
               <div className="font-mono font-semibold">{formatUsd(owner.amountCents)}</div>
             </div>
             <Button
               size="sm"
               variant="secondary"
               nativeButton={false}
-              render={<a href={owner.url} target="_blank" rel="noopener noreferrer nofollow" />}
+              render={<a href={`/go/${slot.id}`} target="_blank" rel="noopener noreferrer nofollow sponsored" />}
             >
               Visit <ExternalLink className="size-3.5" />
             </Button>
@@ -203,7 +206,7 @@ function SlotDialogInner({ slot, devMode, onClose }: Props & { slot: SlotView })
             )}
           </div>
 
-          <Button type="submit" size="lg" disabled={submitting || !amountOk} className="mt-1">
+          <Button type="submit" size="lg" disabled={submitting || !amountOk} className="mt-1 bg-gold text-gold-foreground hover:bg-gold/90">
             {submitting ? <Loader2 className="size-4 animate-spin" /> : owner ? <Zap className="size-4" /> : <ArrowUpRight className="size-4" />}
             {owner ? `Outbid for ${amountOk ? formatUsd(amountCents) : "…"}` : `Buy for ${amountOk ? formatUsd(amountCents) : "…"}`}
           </Button>
