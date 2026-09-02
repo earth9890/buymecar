@@ -19,7 +19,7 @@ interface Props {
 export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props) {
   const [w, h] = slot.size;
   const owned = Boolean(slot.owner);
-  const color = owned ? brandColor(slot.owner!.brandName) : "#ffffff";
+  const color = owned ? brandColor(slot.owner!.brandName) : "#aab3c4";
   const textColor = owned ? readableTextColor(color) : "#ffffff";
   const thin = h <= 0.22;
 
@@ -64,7 +64,7 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
         <meshStandardMaterial
           color={color}
           transparent={!owned}
-          opacity={owned ? 1 : active ? 0.55 : 0.2}
+          opacity={owned ? 1 : active ? 0.6 : 0.28}
           emissive={color}
           emissiveIntensity={active ? (owned ? 0.5 : 0.35) : owned ? 0.12 : 0.04}
           roughness={0.9}

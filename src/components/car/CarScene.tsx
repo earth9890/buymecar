@@ -53,7 +53,7 @@ function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
         position={[5, 9, 4]}
         angle={0.5}
         penumbra={0.6}
-        intensity={260}
+        intensity={200}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0003}
@@ -62,7 +62,7 @@ function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
       <pointLight position={[0, 3, 8]} intensity={40} color="#ffe6c8" />
       {/* Studio softboxes baked into an env map: no network fetch, sharp reflections on the paint */}
       <Environment resolution={512}>
-        <Lightformer form="rect" intensity={6} position={[0, 6, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[10, 4, 1]} />
+        <Lightformer form="rect" intensity={3.5} position={[0, 6, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[10, 4, 1]} />
         <Lightformer form="rect" intensity={2.5} position={[-7, 3, 0]} rotation={[0, Math.PI / 2, 0]} scale={[8, 2.5, 1]} color="#9fb4ff" />
         <Lightformer form="rect" intensity={2.5} position={[7, 3, 0]} rotation={[0, -Math.PI / 2, 0]} scale={[8, 2.5, 1]} />
         <Lightformer form="ring" intensity={3} position={[0, 2, -8]} scale={[4, 4, 1]} color="#ffffff" />
@@ -121,9 +121,11 @@ function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
         makeDefault
         target={[0, 0.95, 0]}
         enablePan={false}
-        minDistance={4.2}
-        maxDistance={13}
+        minDistance={4.5}
+        maxDistance={18}
+        minPolarAngle={0.25}
         maxPolarAngle={Math.PI / 2 - 0.04}
+        rotateSpeed={0.55}
         autoRotate
         autoRotateSpeed={0.5}
         onStart={() => {
@@ -141,7 +143,7 @@ export function CarScene(props: Props) {
     <Canvas
       shadows={{ type: THREE.PCFShadowMap }}
       dpr={[1, 2]}
-      camera={{ position: [6.4, 2.6, 6.2], fov: 36, near: 0.1, far: 60 }}
+      camera={{ position: [7.6, 3.1, 7.3], fov: 35, near: 0.1, far: 60 }}
       gl={{ antialias: true, powerPreference: "high-performance", toneMappingExposure: 1.25 }}
       className="touch-none"
     >
