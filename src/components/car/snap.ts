@@ -53,13 +53,16 @@ export function snapSlotsToCar(
       .filter((h) => h.object.visible && h.face && (h.object as THREE.Mesh).isMesh);
     if (hits.length === 0) continue;
     // Badges, emblems and trim sit a few mm proud of the panel they decorate.
-    // Among everything within 4 cm of the first hit, project onto the biggest
-    // mesh so the decal covers the panel, not the ornament.
+    // Among everything within 4 cm of the first hit, prefer a real panel
+    // material (paint, glass, plate, wheel, light) so the decal covers the
+    // panel, not the ornament on top of it.
     const near = hits.filter((h) => h.distance <= hits[0].distance + 0.04);
-    const hit = near.reduce((best, h) => {
-      const size = (o: THREE.Object3D) => ((o as THREE.Mesh).geometry?.attributes?.position?.count ?? 0);
-      return size(h.object) > size(best.object) ? h : best;
-    }, near[0]);
+    const prefer = interior ? /interior/i : /paint|window|plate|wheel|light|_glass/i;
+    const matName = (o: THREE.Object3D) => {
+      const m = (o as THREE.Mesh).material;
+      return (Array.isArray(m) ? m[0] : m)?.name ?? "";
+    };
+    const hit = near.find((h) => prefer.test(matName(h.object))) ?? near[0];
     if (!hit.face) continue;
 
     normalMatrix.getNormalMatrix(hit.object.matrixWorld);

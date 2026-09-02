@@ -41,6 +41,9 @@ function Ready({ onReady }: { onReady?: () => void }) {
 function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [car, setCar] = useState<THREE.Object3D | null>(null);
+  // Auto-rotate until the visitor touches the scene. Kept in state because
+  // re-renders would otherwise re-apply the prop and restart it.
+  const [autoRotate, setAutoRotate] = useState(true);
   const onCarLoaded = useCallback((root: THREE.Object3D) => setCar(root), []);
   // Decals follow the real mesh: re-snap when the car or slot list changes.
   const snapped = useMemo(() => {
@@ -157,11 +160,9 @@ function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
         maxPolarAngle={Math.PI / 2 - 0.04}
         rotateSpeed={0.55}
         zoomSpeed={1.6}
-        autoRotate
+        autoRotate={autoRotate}
         autoRotateSpeed={0.5}
-        onStart={() => {
-          if (controls.current) controls.current.autoRotate = false;
-        }}
+        onStart={() => setAutoRotate(false)}
         enableDamping
         dampingFactor={0.08}
       />

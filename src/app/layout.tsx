@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "buymecar.lol — Put your brand on my G-Wagon",
   description:
-    "A 3D Mercedes-AMG G63 with 30 sponsor panels. Buy one, your brand goes on the car and every click goes to your link. Anyone can outbid you for 20% more. When it's funded, I buy the real car.",
+    "A scanned Mercedes-AMG G63 with 35 sponsor panels. Buy one, your brand goes on the car and every click goes to your link. Anyone can outbid you for 20% more. When it's funded, I buy the real car.",
   openGraph: {
     title: "buymecar.lol",
     description: "Buy a panel on my future G-Wagon. Highest payer keeps it.",
