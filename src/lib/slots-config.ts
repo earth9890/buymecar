@@ -26,6 +26,8 @@ export interface SlotDef {
   size: [number, number];
   /** Round decal (diameter = size[0]); default is a rectangle. */
   shape?: "circle";
+  /** Overrides for the runtime surface snap (see components/car/snap.ts). */
+  snap?: { offset?: number; align?: boolean };
   /** Marketing blurb shown in the buy dialog. */
   pitch: string;
 }
@@ -53,9 +55,9 @@ export const SLOTS: SlotDef[] = [
     label: "Hood",
     zone: "top",
     startCents: 100000,
-    position: [1.72, 1.467, 0],
+    position: [1.6, 1.467, 0],
     rotation: FACE_UP,
-    size: [1.45, 0.95],
+    size: [1.3, 1.0],
     pitch: "The billboard. First thing anyone sees walking up to the car.",
   },
   {
@@ -67,6 +69,7 @@ export const SLOTS: SlotDef[] = [
     rotation: FACE_REAR,
     size: [0.7, 0.7],
     shape: "circle",
+    snap: { offset: 0.035, align: false },
     pitch: "The iconic G-Wagon spare. Stares at every driver stuck behind us.",
   },
   {
@@ -74,9 +77,9 @@ export const SLOTS: SlotDef[] = [
     label: "Roof (front)",
     zone: "top",
     startCents: 60000,
-    position: [0.35, 1.967, 0],
+    position: [-0.1, 1.967, 0],
     rotation: FACE_UP,
-    size: [1.6, 1.4],
+    size: [1.3, 1.35],
     pitch: "Drone shots, parking garages, tall people. Big flat canvas.",
   },
   {
@@ -84,9 +87,9 @@ export const SLOTS: SlotDef[] = [
     label: "Roof (rear)",
     zone: "top",
     startCents: 60000,
-    position: [-1.3, 1.967, 0],
+    position: [-1.32, 1.967, 0],
     rotation: FACE_UP,
-    size: [1.6, 1.4],
+    size: [1.3, 1.15],
     pitch: "Second half of the roof. Pair it with the front for a mega banner.",
   },
 
@@ -200,7 +203,7 @@ export const SLOTS: SlotDef[] = [
     label: "Windshield Sun Strip",
     zone: "front",
     startCents: 30000,
-    position: [1.192, 1.82, 0],
+    position: [1.192, 1.74, 0],
     rotation: FACE_FRONT,
     size: [1.5, 0.1],
     pitch: "The strip across the top of the windshield. Very rally.",
@@ -253,7 +256,7 @@ export const SLOTS: SlotDef[] = [
     label: "Passenger Mirror Cap",
     zone: "passenger",
     startCents: 20000,
-    position: [1.02, 1.5, MIRROR_Z],
+    position: [0.62, 1.32, MIRROR_Z],
     rotation: FACE_PASSENGER,
     size: [0.22, 0.12],
     pitch: "Tiny, but every side-view photo has it.",
@@ -263,7 +266,7 @@ export const SLOTS: SlotDef[] = [
     label: "Driver Mirror Cap",
     zone: "driver",
     startCents: 20000,
-    position: [1.02, 1.5, -MIRROR_Z],
+    position: [0.62, 1.32, -MIRROR_Z],
     rotation: FACE_DRIVER,
     size: [0.22, 0.12],
     pitch: "Tiny, but every side-view photo has it.",

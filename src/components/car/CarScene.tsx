@@ -51,7 +51,7 @@ function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
     return result;
   }, [car, slots]);
   const placed = useMemo(
-    () => slots.map((s) => (snapped[s.id] ? { ...s, position: snapped[s.id] } : s)),
+    () => slots.map((s) => (snapped[s.id] ? { ...s, ...snapped[s.id] } : s)),
     [slots, snapped],
   );
   useCursor(hoveredId !== null);
