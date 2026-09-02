@@ -32,11 +32,11 @@ Open http://localhost:3000, click any glowing panel, fill in the form, click Buy
 
 ## Dodo Payments integration
 
-Everything is wired; it only needs credentials.
+Everything is wired; it only needs credentials. Step-by-step dashboard guide with test cards: [DODO_SETUP.md](./DODO_SETUP.md).
 
 1. In the Dodo dashboard create a **one-time, pay-what-you-want** product. Copy its id into `DODO_PRODUCT_ID`. Every purchase charges this product with a fixed `amount` (in cents) equal to the bid.
 2. Create an API key → `DODO_PAYMENTS_API_KEY`. Set `DODO_PAYMENTS_ENVIRONMENT=test_mode` until you go live.
-3. Add a webhook pointing at `https://<your-domain>/api/webhooks/dodo`, subscribe to `payment.succeeded` and `payment.failed`, copy the signing secret into `DODO_PAYMENTS_WEBHOOK_KEY`.
+3. Add a webhook pointing at `https://<your-domain>/api/webhooks/dodo`, subscribe to `payment.succeeded`, `payment.failed` and `payment.cancelled`, copy the signing secret into `DODO_PAYMENTS_WEBHOOK_KEY`.
 4. Set `NEXT_PUBLIC_SITE_URL` to your public URL so the checkout `return_url` and dev redirects are correct.
 
 Flow: `POST /api/checkout` validates the bid against the live floor, inserts a pending bid, calls `checkoutSessions.create` with `metadata.bid_id`, and returns the hosted `checkout_url`. The webhook verifies the signature with the SDK's `webhooks.unwrap`, reads `bid_id` from metadata (falls back to `checkout_session_id`), and calls `markBidPaid`, which is idempotent so replays are safe.
@@ -58,9 +58,15 @@ Flow: `POST /api/checkout` validates the bid against the live floor, inserts a p
 
 Works on Vercel or any Node host. For production swap `DATABASE_URL` to a Turso URL (`libsql://…`) plus `DATABASE_AUTH_TOKEN`; the SQLite file is only for local dev because serverless filesystems are ephemeral.
 
+## Tests
+
+```bash
+pnpm test   # vitest: pricing rules + full bid lifecycle on a temp SQLite file
+```
+
 ## TODO
 
-- Real Dodo credentials + end-to-end test in test mode
+- Paste real Dodo credentials + end-to-end test in test mode (see DODO_SETUP.md)
 - Admin page to remove abusive sponsors / refund
 - Upload the real G63 GLB and align slot positions to it
 - OG image generator showing the current car

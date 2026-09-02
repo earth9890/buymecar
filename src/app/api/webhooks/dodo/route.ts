@@ -24,7 +24,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  if (event.type === "payment.succeeded" || event.type === "payment.failed") {
+  if (
+    event.type === "payment.succeeded" ||
+    event.type === "payment.failed" ||
+    event.type === "payment.cancelled"
+  ) {
     const payment = event.data;
     const meta = (payment.metadata ?? {}) as Record<string, string>;
     let bidId: string | undefined = meta.bid_id;
