@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MousePointerClick } from "lucide-react";
+import { Loader2, MousePointerClick } from "lucide-react";
 import { formatUsd } from "@/lib/pricing";
 import type { SlotsPayload } from "@/lib/types";
 import { SiteHeader } from "./SiteHeader";
@@ -11,11 +11,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 const CarScene = dynamic(() => import("./car/CarScene").then((m) => m.CarScene), {
   ssr: false,
-  loading: () => (
-    <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
-      Loading the garage…
-    </div>
-  ),
+  loading: () => null,
 });
 
 const POLL_MS = 20_000;
@@ -24,6 +20,8 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
   const [data, setData] = useState<SlotsPayload>(initial);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
+  const onReady = useCallback(() => setReady(true), []);
 
   const refresh = useCallback(async () => {
     try {
@@ -61,8 +59,17 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
           selectedId={selectedId}
           onSelect={(id) => setSelectedId(id)}
           onHover={setHoveredId}
+          onReady={onReady}
         />
       </div>
+
+      {!ready && (
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#07080b]">
+          <div className="flex items-center gap-3 rounded-xl border bg-background/70 px-4 py-3 text-sm text-muted-foreground backdrop-blur">
+            <Loader2 className="size-4 animate-spin" /> Rolling the G-Wagon out of the garage…
+          </div>
+        </div>
+      )}
 
       <SiteHeader stats={data.stats} slots={data.slots} onPick={setSelectedId} />
 

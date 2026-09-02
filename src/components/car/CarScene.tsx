@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useRef, useState, type ComponentRef } from "react";
+import { Suspense, useEffect, useRef, useState, type ComponentRef } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import {
@@ -20,9 +20,19 @@ interface Props {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onHover?: (id: string | null) => void;
+  /** Fires once the scene (env map, fonts, floor) has actually rendered. */
+  onReady?: () => void;
 }
 
-function Scene({ slots, selectedId, onSelect, onHover }: Props) {
+function Ready({ onReady }: { onReady?: () => void }) {
+  // Rendered inside Suspense: mounting means every async asset resolved.
+  useEffect(() => {
+    onReady?.();
+  }, [onReady]);
+  return null;
+}
+
+function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   useCursor(hoveredId !== null);
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
@@ -105,6 +115,7 @@ function Scene({ slots, selectedId, onSelect, onHover }: Props) {
         </mesh>
       </group>
 
+      <Ready onReady={onReady} />
       <OrbitControls
         ref={controls}
         makeDefault

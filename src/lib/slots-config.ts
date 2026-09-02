@@ -5,6 +5,9 @@
  *   +X = front of the car, +Y = up, +Z = passenger side (car faces +X, so
  *   the driver sits on the -Z side, left-hand-drive).
  *
+ * Positions sit ~6mm proud of the panel they decorate so they never z-fight
+ * the body. If you change GWagon.tsx dimensions, move these with them.
+ *
  * `rotation` orients a PlaneGeometry (which faces +Z by default) so its normal
  * points out of the body panel and its text reads correctly for a viewer
  * standing in front of that panel.
@@ -45,7 +48,7 @@ export const SLOTS: SlotDef[] = [
     label: "Hood",
     zone: "top",
     startCents: 50000,
-    position: [1.7, 1.436, 0],
+    position: [1.7, 1.447, 0],
     rotation: FACE_UP,
     size: [1.5, 0.95],
     pitch: "The billboard. First thing anyone sees walking up to the car.",
@@ -55,7 +58,7 @@ export const SLOTS: SlotDef[] = [
     label: "Spare Tire Cover",
     zone: "rear",
     startCents: 35000,
-    position: [-2.561, 1.1, 0.3],
+    position: [-2.575, 1.1, 0.3],
     rotation: FACE_REAR,
     size: [0.66, 0.66],
     shape: "circle",
@@ -66,7 +69,7 @@ export const SLOTS: SlotDef[] = [
     label: "Roof (front)",
     zone: "top",
     startCents: 30000,
-    position: [0.35, 1.956, 0],
+    position: [0.35, 1.967, 0],
     rotation: FACE_UP,
     size: [1.6, 1.4],
     pitch: "Drone shots, parking garages, tall people. Big flat canvas.",
@@ -76,7 +79,7 @@ export const SLOTS: SlotDef[] = [
     label: "Roof (rear)",
     zone: "top",
     startCents: 30000,
-    position: [-1.3, 1.956, 0],
+    position: [-1.3, 1.967, 0],
     rotation: FACE_UP,
     size: [1.6, 1.4],
     pitch: "Second half of the roof. Pair it with the front for a mega banner.",
@@ -192,7 +195,7 @@ export const SLOTS: SlotDef[] = [
     label: "Windshield Sun Strip",
     zone: "front",
     startCents: 15000,
-    position: [1.213, 1.86, 0],
+    position: [1.216, 1.86, 0],
     rotation: FACE_FRONT,
     size: [1.55, 0.14],
     pitch: "The strip across the top of the windshield. Very rally.",
@@ -202,7 +205,7 @@ export const SLOTS: SlotDef[] = [
     label: "Front Bumper",
     zone: "front",
     startCents: 20000,
-    position: [2.476, 0.62, 0],
+    position: [2.482, 0.62, 0],
     rotation: FACE_FRONT,
     size: [1.5, 0.2],
     pitch: "Greets everyone in the rear-view mirror ahead of us.",
@@ -214,7 +217,7 @@ export const SLOTS: SlotDef[] = [
     label: "Rear Window Banner",
     zone: "rear",
     startCents: 15000,
-    position: [-2.313, 1.72, 0],
+    position: [-2.318, 1.72, 0],
     rotation: FACE_REAR,
     size: [1.45, 0.3],
     pitch: "Top of the rear glass. Tailgaters can't miss it.",
@@ -224,7 +227,7 @@ export const SLOTS: SlotDef[] = [
     label: "Tailgate Panel",
     zone: "rear",
     startCents: 20000,
-    position: [-2.302, 1.0, -0.42],
+    position: [-2.308, 1.0, -0.42],
     rotation: FACE_REAR,
     size: [0.6, 0.6],
     pitch: "Next to the spare tire on the rear door.",
@@ -234,7 +237,7 @@ export const SLOTS: SlotDef[] = [
     label: "Rear Bumper",
     zone: "rear",
     startCents: 15000,
-    position: [-2.476, 0.62, 0],
+    position: [-2.482, 0.62, 0],
     rotation: FACE_REAR,
     size: [1.5, 0.2],
     pitch: "Bumper sticker, but make it a brand deal.",
