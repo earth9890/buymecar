@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { SlotView } from "@/lib/types";
+import type { SlotDef } from "@/lib/slots-config";
 
 export interface SnappedPlacement {
   position: [number, number, number];
@@ -16,7 +16,7 @@ export interface SnappedPlacement {
  */
 export function snapSlotsToCar(
   car: THREE.Object3D,
-  slots: SlotView[],
+  slots: SlotDef[],
 ): Record<string, SnappedPlacement> {
   car.updateMatrixWorld(true);
   const raycaster = new THREE.Raycaster();

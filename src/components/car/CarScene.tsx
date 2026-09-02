@@ -17,6 +17,7 @@ import { GltfCar } from "./GltfCar";
 import { SlotDecal } from "./SlotDecal";
 import { ProjectedDecal } from "./ProjectedDecal";
 import { snapSlotsToCar } from "./snap";
+import { SLOTS } from "@/lib/slots-config";
 
 const MODEL_URL = process.env.NEXT_PUBLIC_CAR_MODEL_URL ?? "/models/g63.glb";
 const USE_GLTF = MODEL_URL !== "procedural";
@@ -45,15 +46,16 @@ function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
   // re-renders would otherwise re-apply the prop and restart it.
   const [autoRotate, setAutoRotate] = useState(true);
   const onCarLoaded = useCallback((root: THREE.Object3D) => setCar(root), []);
-  // Decals follow the real mesh: re-snap when the car or slot list changes.
+  // Placement depends only on the static catalogue and the mesh, so ownership
+  // polls never rebuild the projected geometry.
   const snapped = useMemo(() => {
     if (!car) return {};
-    const result = snapSlotsToCar(car, slots);
+    const result = snapSlotsToCar(car, SLOTS);
     if (process.env.NODE_ENV !== "production") {
-      console.debug("[buymecar] snapped", Object.keys(result).length, "of", slots.length, "slots", result);
+      console.debug("[buymecar] snapped", Object.keys(result).length, "of", SLOTS.length, "slots");
     }
     return result;
-  }, [car, slots]);
+  }, [car]);
 
   useCursor(hoveredId !== null);
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
