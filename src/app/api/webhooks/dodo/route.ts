@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDodo, isDodoConfigured } from "@/lib/dodo";
-import { getBidBySession, markBidFailed, markBidPaid } from "@/lib/repo";
+import { getBidBySession, markBidFailed, markBidPaid, setBidEmail } from "@/lib/repo";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +39,11 @@ export async function POST(req: Request) {
       console.warn("[dodo webhook] no bid_id on payment", payment.payment_id);
       return NextResponse.json({ received: true, ignored: true });
     }
-    if (event.type === "payment.succeeded") await markBidPaid(bidId, payment.payment_id);
+    if (event.type === "payment.succeeded") {
+      await markBidPaid(bidId, payment.payment_id);
+      const email = payment.customer?.email;
+      if (email) await setBidEmail(bidId, email);
+    }
     else await markBidFailed(bidId);
   }
 

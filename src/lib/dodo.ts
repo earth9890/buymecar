@@ -28,7 +28,7 @@ export interface CheckoutArgs {
   slotId: string;
   slotLabel: string;
   amountCents: number;
-  email: string;
+  email?: string;
   brandName: string;
 }
 
@@ -42,7 +42,7 @@ export async function createDodoCheckout(args: CheckoutArgs): Promise<{ sessionI
     product_cart: [
       { product_id: process.env.DODO_PRODUCT_ID!, quantity: 1, amount: args.amountCents },
     ],
-    customer: { email: args.email, name: args.brandName },
+    ...(args.email ? { customer: { email: args.email, name: args.brandName } } : {}),
     return_url: `${siteUrl()}/success?bid=${encodeURIComponent(args.bidId)}`,
     metadata: {
       bid_id: args.bidId,

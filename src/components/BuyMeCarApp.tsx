@@ -2,15 +2,19 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, Loader2, MousePointerClick, Trophy } from "lucide-react";
+import { ArrowDown, ArrowRight, Globe, Loader2, MousePointerClick, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/sonner";
 import { formatUsd } from "@/lib/pricing";
 import type { SlotsPayload } from "@/lib/types";
 import type { CameraCommand, ViewPreset } from "./car/CarScene";
 import { SiteHeader } from "./SiteHeader";
-import { SlotDialog } from "./SlotDialog";
+import { SlotDialog, type ClaimDraft } from "./SlotDialog";
+import { PriceStepper } from "./PriceStepper";
+import { parseTarget } from "@/lib/target";
+import { showroom } from "@/lib/sound";
 import { ViewBar } from "./ViewBar";
 import { Leaderboard } from "./Leaderboard";
 import { AvailableGrid } from "./AvailableGrid";
@@ -31,7 +35,11 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
   const [ready, setReady] = useState(false);
   const [command, setCommand] = useState<CameraCommand | null>(null);
   const [activePreset, setActivePreset] = useState<ViewPreset | null>("hero");
-  const [wheelZoom, setWheelZoom] = useState(false);
+  const [overCar, setOverCar] = useState(false);
+  const [sound, setSound] = useState(false);
+  const [draft, setDraft] = useState<ClaimDraft | null>(null);
+  const [heroTarget, setHeroTarget] = useState("");
+  const [heroAmount, setHeroAmount] = useState<number | null>(null);
   const [watching, setWatching] = useState(1);
   const nonce = useRef(0);
   const heroRef = useRef<HTMLElement>(null);
@@ -96,22 +104,30 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
     return () => clearInterval(id);
   }, []);
 
-  // Wheel zoom only after the visitor engages with the car, so the page still scrolls.
+  // Sound is opt-in and remembered.
   useEffect(() => {
-    const disengage = () => setWheelZoom(false);
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && disengage();
-    window.addEventListener("scroll", disengage, { passive: true });
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("scroll", disengage);
-      window.removeEventListener("keydown", onKey);
-    };
+    if (showroom?.restore()) {
+      // Browsers block audio until a gesture; arm on the first click anywhere.
+      const arm = () => {
+        showroom.setEnabled(true);
+        setSound(true);
+        window.removeEventListener("pointerdown", arm);
+      };
+      window.addEventListener("pointerdown", arm, { once: true });
+      return () => window.removeEventListener("pointerdown", arm);
+    }
   }, []);
+  const toggleSound = useCallback(() => {
+    const next = !sound;
+    setSound(next);
+    showroom?.setEnabled(next);
+  }, [sound]);
 
   // ---- camera ----
   const send = useCallback((c: Omit<CameraCommand, "nonce">) => {
     nonce.current += 1;
     setCommand({ ...c, nonce: nonce.current });
+    if (c.type !== "zoom") showroom?.rev(c.type === "focus" ? 0.7 : 1);
   }, []);
   const onPreset = useCallback(
     (p: ViewPreset) => {
@@ -130,12 +146,28 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
     [send],
   );
   const pickSlot = useCallback(
-    (id: string) => {
+    (id: string, d: ClaimDraft | null = null) => {
       focusSlot(id);
+      setDraft(d);
       // Let the flight start before the dialog covers it.
       window.setTimeout(() => setSelectedId(id), 350);
     },
     [focusSlot],
+  );
+  const onHoverSlot = useCallback((id: string | null) => {
+    setHoveredId(id);
+    if (id) showroom?.tick();
+  }, []);
+  const claimHood = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!parseTarget(heroTarget)) {
+        toast.error("Enter your product URL or an @handle first");
+        return;
+      }
+      pickSlot("hood", { target: heroTarget, amountCents: heroAmount ?? undefined });
+    },
+    [heroTarget, heroAmount, pickSlot],
   );
 
   const onShare = useCallback(async () => {
@@ -159,6 +191,7 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
     [data.slots, hoveredId, highlightId],
   );
   const hood = data.slots.find((s) => s.id === "hood");
+  const hoodPrice = Math.max(hood?.minBidCents ?? 0, heroAmount ?? 0);
   const top = useMemo(
     () => data.slots.filter((s) => s.owner).sort((a, b) => b.owner!.amountCents - a.owner!.amountCents)[0] ?? null,
     [data.slots],
@@ -177,15 +210,19 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
       {/* ================= HERO ================= */}
       {/* Stacked on phones (car above the copy), a full-viewport overlay on desktop. */}
       <section ref={heroRef} className="relative w-full scroll-mt-14 lg:h-[calc(100dvh-3.5rem)] lg:min-h-[640px] lg:overflow-hidden">
-        <div className="relative h-[54dvh] min-h-[340px] lg:absolute lg:inset-0 lg:h-auto" onPointerDown={() => setWheelZoom(true)}>
+        <div className="relative h-[54dvh] min-h-[340px] lg:absolute lg:inset-0 lg:h-auto">
           <CarScene
             slots={data.slots}
             selectedId={selectedId}
             highlightId={highlightId}
             command={command}
-            wheelZoom={wheelZoom}
-            onSelect={(id) => setSelectedId(id)}
-            onHover={setHoveredId}
+            paused={selectedId !== null}
+            onSelect={(id) => {
+              setDraft(null);
+              setSelectedId(id);
+            }}
+            onHover={onHoverSlot}
+            onCarHover={setOverCar}
             onReady={onReady}
             onInteract={() => setActivePreset(null)}
           />
@@ -199,11 +236,18 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
           </div>
         )}
 
-        {/* hover HUD */}
+        {/* top HUD: panel info when hovering a price, otherwise the zoom hint while over the car */}
         <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex justify-center px-4">
           <div
-            className={`rounded-full border border-white/[0.08] bg-[#0b0d12]/80 px-4 py-1.5 text-sm backdrop-blur-md transition-opacity ${hovered ? "opacity-100" : "opacity-0"}`}
+            className={`rounded-full border px-4 py-1.5 text-sm backdrop-blur-md transition-all duration-200 ${
+              hovered
+                ? "border-white/[0.1] bg-[#0b0d12]/85 opacity-100"
+                : overCar && ready
+                  ? "border-gold/40 bg-[#0b0d12]/85 text-foreground opacity-100"
+                  : "border-transparent opacity-0"
+            }`}
           >
+            {!hovered && <span>Scroll to zoom · drag to spin · click a price to buy</span>}
             {hovered && (
               <span>
                 <span className="font-semibold">{hovered.label}</span>
@@ -236,24 +280,37 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
                 {data.slots.length} panels on a real Mercedes-AMG G63. Highest payer keeps the panel, every click on it goes to your link,
                 and anyone can outbid you for 20% more. When it&apos;s funded, I buy the car and wrap it exactly like this.
               </p>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                {hood && (
-                  <Button size="lg" className="bg-gold text-gold-foreground hover:bg-gold/90" onClick={() => pickSlot("hood")}>
-                    {hood.owner ? "Take the hood" : "Claim the hood"} · {formatUsd(hood.minBidCents)}
-                  </Button>
-                )}
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white/15 bg-white/[0.03] hover:bg-white/[0.08]"
+              {hood && (
+                <form onSubmit={claimHood} className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="relative flex-1 sm:max-w-xs">
+                    <Globe className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={heroTarget}
+                      onChange={(e) => setHeroTarget(e.target.value)}
+                      placeholder="Your product URL or @handle"
+                      className="h-11 border-white/15 bg-[#0b0d12]/80 pl-9 backdrop-blur-md"
+                      inputMode="url"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <PriceStepper valueCents={hoodPrice} minCents={hood.minBidCents} onChange={setHeroAmount} />
+                    <Button type="submit" size="lg" className="h-11 bg-gold text-gold-foreground hover:bg-gold/90">
+                      {hood.owner ? "Take the hood" : "Claim the hood"} <ArrowRight className="size-4" />
+                    </Button>
+                  </div>
+                </form>
+              )}
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <button
+                  type="button"
                   onClick={() => document.getElementById("spots")?.scrollIntoView({ behavior: "smooth" })}
+                  className="inline-flex items-center gap-1 hover:text-foreground"
                 >
-                  All {data.slots.length} spots <ArrowDown className="size-4" />
-                </Button>
-              </div>
-              <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <MousePointerClick className="size-3.5" />
-                {wheelZoom ? "Scroll to zoom · Esc to release" : "Drag to spin · click the car to zoom with your wheel · click a price to buy"}
+                  or pick any of the {data.slots.length} spots <ArrowDown className="size-3" />
+                </button>
+                <span className="inline-flex items-center gap-1.5">
+                  <MousePointerClick className="size-3.5" /> Drag to spin · hover the car and scroll to zoom · click a price to buy
+                </span>
               </div>
             </div>
 
@@ -284,7 +341,7 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
                 </div>
               </div>
               <div className="max-w-full overflow-x-auto">
-                <ViewBar active={activePreset} onPreset={onPreset} onZoom={onZoom} />
+                <ViewBar active={activePreset} sound={sound} onPreset={onPreset} onZoom={onZoom} onToggleSound={toggleSound} />
               </div>
             </div>
           </div>
@@ -297,7 +354,15 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
       <HowItWorks />
       <SiteFooter devMode={data.devMode} />
 
-      <SlotDialog slot={selected} devMode={data.devMode} onClose={() => setSelectedId(null)} />
+      <SlotDialog
+        slot={selected}
+        devMode={data.devMode}
+        draft={draft}
+        onClose={() => {
+          setSelectedId(null);
+          setDraft(null);
+        }}
+      />
       <Toaster position="bottom-right" richColors />
     </div>
   );

@@ -213,6 +213,11 @@ export async function markBidPaid(bidId: string, paymentId: string | null): Prom
   return { ...bid, status: "paid", paymentId, paidAt: now };
 }
 
+export async function setBidEmail(bidId: string, email: string) {
+  await ensureDb();
+  await db.update(bids).set({ email }).where(eq(bids.id, bidId));
+}
+
 export async function markBidFailed(bidId: string) {
   await ensureDb();
   await db

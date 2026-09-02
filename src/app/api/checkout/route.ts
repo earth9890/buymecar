@@ -4,23 +4,25 @@ import { z } from "zod";
 import { attachCheckoutSession, createPendingBid, markBidFailed } from "@/lib/repo";
 import { createDodoCheckout, isDodoConfigured, siteUrl } from "@/lib/dodo";
 import { SLOT_BY_ID } from "@/lib/slots-config";
+import { fetchSiteMeta } from "@/lib/preview";
 
 export const dynamic = "force-dynamic";
 
-const httpUrl = z
-  .string()
-  .trim()
-  .transform((v) => (/^https?:\/\//i.test(v) ? v : `https://${v}`))
-  .pipe(z.url({ protocol: /^https?$/ }));
+const optionalText = (max: number) => z.string().trim().max(max).optional().or(z.literal(""));
 
+/**
+ * One field is enough: a product URL or an @handle. Brand name, tagline and
+ * logo are unfurled from the page unless the sponsor overrides them. Email is
+ * collected by the payment provider, not here.
+ */
 const bodySchema = z.object({
   slotId: z.string().min(1),
-  brandName: z.string().trim().min(1).max(40),
-  url: httpUrl,
-  tagline: z.string().trim().max(60).optional().or(z.literal("")),
-  logoUrl: httpUrl.optional().or(z.literal("")),
-  email: z.email(),
+  target: z.string().trim().min(1).max(300),
   amountCents: z.number().int().positive().max(100_000_000),
+  brandName: optionalText(40),
+  tagline: optionalText(60),
+  logoUrl: optionalText(500),
+  agreed: z.literal(true),
 });
 
 export async function POST(req: Request) {
@@ -36,32 +38,33 @@ export async function POST(req: Request) {
   const def = SLOT_BY_ID[data.slotId];
   if (!def) return NextResponse.json({ error: "Unknown slot" }, { status: 404 });
 
+  const meta = await fetchSiteMeta(data.target);
+  if (!meta) return NextResponse.json({ error: "That doesn't look like a URL or @handle" }, { status: 400 });
+
+  const brandName = (data.brandName || meta.title || meta.target.name).slice(0, 40);
+  const tagline = (data.tagline || meta.description || "").slice(0, 60) || null;
+  const logoUrl = data.logoUrl || meta.image || meta.target.logoUrl || null;
+
   const bidId = `bid_${nanoid(14)}`;
   const result = await createPendingBid(
     {
       slotId: def.id,
-      brandName: data.brandName,
-      url: data.url,
-      tagline: data.tagline || null,
-      logoUrl: data.logoUrl || null,
-      email: data.email,
+      brandName,
+      url: meta.target.url,
+      tagline,
+      logoUrl,
+      email: "",
       amountCents: data.amountCents,
     },
     bidId,
   );
   if (!result.ok) {
-    return NextResponse.json(
-      { error: result.error, minBidCents: result.minBidCents },
-      { status: 409 },
-    );
+    return NextResponse.json({ error: result.error, minBidCents: result.minBidCents }, { status: 409 });
   }
 
-  // DEV MODE: no Dodo credentials. Simulate a hosted checkout that instantly succeeds.
   if (!isDodoConfigured()) {
-    // In dev use whatever origin the request came from so any port works.
     const base = process.env.NODE_ENV === "production" ? siteUrl() : new URL(req.url).origin;
-    const url = `${base}/api/dev/complete?bid=${encodeURIComponent(bidId)}`;
-    return NextResponse.json({ bidId, checkoutUrl: url, devMode: true });
+    return NextResponse.json({ bidId, checkoutUrl: `${base}/api/dev/complete?bid=${encodeURIComponent(bidId)}`, devMode: true });
   }
 
   try {
@@ -70,8 +73,7 @@ export async function POST(req: Request) {
       slotId: def.id,
       slotLabel: def.label,
       amountCents: data.amountCents,
-      email: data.email,
-      brandName: data.brandName,
+      brandName,
     });
     await attachCheckoutSession(bidId, sessionId);
     return NextResponse.json({ bidId, checkoutUrl: url, devMode: false });
