@@ -58,7 +58,9 @@ export async function POST(req: Request) {
 
   // DEV MODE: no Dodo credentials. Simulate a hosted checkout that instantly succeeds.
   if (!isDodoConfigured()) {
-    const url = `${siteUrl()}/api/dev/complete?bid=${encodeURIComponent(bidId)}`;
+    // In dev use whatever origin the request came from so any port works.
+    const base = process.env.NODE_ENV === "production" ? siteUrl() : new URL(req.url).origin;
+    const url = `${base}/api/dev/complete?bid=${encodeURIComponent(bidId)}`;
     return NextResponse.json({ bidId, checkoutUrl: url, devMode: true });
   }
 

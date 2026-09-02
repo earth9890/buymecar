@@ -16,5 +16,6 @@ export async function GET(req: Request) {
   if (!bidId) return NextResponse.json({ error: "Missing bid" }, { status: 400 });
   const bid = await markBidPaid(bidId, `dev_${Date.now()}`);
   if (!bid) return NextResponse.json({ error: "Bid not found" }, { status: 404 });
-  return NextResponse.redirect(`${siteUrl()}/success?bid=${encodeURIComponent(bidId)}&dev=1`, 303);
+  const base = process.env.NODE_ENV === "production" ? siteUrl() : new URL(req.url).origin;
+  return NextResponse.redirect(`${base}/success?bid=${encodeURIComponent(bidId)}&dev=1`, 303);
 }
