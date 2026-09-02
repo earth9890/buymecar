@@ -222,14 +222,10 @@ export function GWagon() {
         <boxGeometry args={[0.02, 0.06, 0.9]} />
       </mesh>
       {[1, -1].map((s) => (
-        <mesh key={s} position={[2.478, 0.68, s * 0.7]} rotation={[0, 0, Math.PI / 2]} material={m.lamp}>
+        <mesh key={s} position={[2.478, 0.68, s * 0.86]} rotation={[0, 0, Math.PI / 2]} material={m.lamp}>
           <cylinderGeometry args={[0.05, 0.05, 0.01, 24]} />
         </mesh>
       ))}
-      {/* license plate */}
-      <mesh position={[2.478, 0.72, 0]} material={m.chrome}>
-        <boxGeometry args={[0.01, 0.12, 0.5]} />
-      </mesh>
 
       {/* ---------- rear end ---------- */}
       <RoundedBox args={[0.25, 0.28, 1.95]} radius={0.04} smoothness={3} position={[-2.35, 0.62, 0]} material={m.trim} castShadow />
