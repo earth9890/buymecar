@@ -22,12 +22,13 @@ export function snapSlotsToCar(
     euler.set(s.rotation[0], s.rotation[1], s.rotation[2]);
     normal.set(0, 0, 1).applyEuler(euler).normalize();
     const interior = s.zone === "interior";
-    const standoff = interior ? 0.35 : 1.8;
+    // Interior rays start from the far side of the cabin so they cross the seats/dash.
+    const standoff = interior ? 0.95 : 1.8;
     origin.set(s.position[0], s.position[1], s.position[2]).addScaledVector(normal, standoff);
     dir.copy(normal).negate();
     raycaster.set(origin, dir);
     raycaster.near = 0;
-    raycaster.far = interior ? 0.7 : 3.6;
+    raycaster.far = interior ? 1.7 : 3.6;
     const hits = raycaster.intersectObject(car, true);
     const hit = hits.find((h) => h.object.visible);
     if (!hit) continue;
