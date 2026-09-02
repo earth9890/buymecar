@@ -19,7 +19,7 @@ interface Props {
 export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props) {
   const [w, h] = slot.size;
   const owned = Boolean(slot.owner);
-  const color = owned ? brandColor(slot.owner!.brandName) : "#aab3c4";
+  const color = owned ? brandColor(slot.owner!.brandName) : "#c9d1de";
   const textColor = owned ? readableTextColor(color) : "#ffffff";
   const thin = h <= 0.22;
 
@@ -32,16 +32,21 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
   // Text has to fit inside the inscribed square of a circle.
   const tw = circle ? w * 0.72 : w;
 
-  const primary = owned ? slot.owner!.brandName.toUpperCase() : "AVAILABLE";
-  const secondary = owned
-    ? slot.owner!.tagline || hostOf(slot.owner!.url)
-    : formatUsd(slot.minBidCents);
+  // Available panels show only the price; owned panels show the brand.
+  const primary = owned ? slot.owner!.brandName.toUpperCase() : formatUsd(slot.minBidCents);
+  const secondary = owned ? slot.owner!.tagline || hostOf(slot.owner!.url) : null;
 
   // Font sizing: fit the primary line to the panel width, capped by height.
   const primarySize = thin
     ? h * 0.62
-    : Math.min(h * 0.34, (tw * 1.3) / Math.max(primary.length, 5));
-  const secondarySize = thin ? h * 0.5 : Math.min(h * 0.2, (tw * 1.3) / Math.max(secondary.length, 8));
+    : secondary
+      ? Math.min(h * 0.34, (tw * 1.3) / Math.max(primary.length, 5))
+      : Math.min(h * 0.5, (tw * 1.4) / Math.max(primary.length, 4));
+  const secondarySize = secondary
+    ? thin
+      ? h * 0.5
+      : Math.min(h * 0.2, (tw * 1.3) / Math.max(secondary.length, 8))
+    : 0;
 
   const active = hovered || selected;
 
@@ -64,7 +69,7 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
         <meshStandardMaterial
           color={color}
           transparent={!owned}
-          opacity={owned ? 1 : active ? 0.6 : 0.28}
+          opacity={owned ? 1 : active ? 0.65 : 0.3}
           emissive={color}
           emissiveIntensity={active ? (owned ? 0.5 : 0.35) : owned ? 0.12 : 0.04}
           roughness={0.9}
@@ -88,12 +93,12 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
           color={textColor}
           letterSpacing={0.08}
         >
-          {`${primary}  ·  ${secondary}`}
+          {secondary ? `${primary}  ·  ${secondary}` : primary}
         </Text>
       ) : (
         <>
           <Text
-            position={[0, h * 0.12, 0.012]}
+            position={[0, secondary ? h * 0.12 : 0, 0.012]}
             depthOffset={-4}
             fontSize={primarySize}
             maxWidth={tw * 0.92}
@@ -105,6 +110,7 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
           >
             {primary}
           </Text>
+          {secondary && (
           <Text
             position={[0, -h * 0.22, 0.012]}
             depthOffset={-4}
@@ -118,6 +124,7 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
           >
             {secondary}
           </Text>
+          )}
         </>
       )}
     </group>

@@ -31,6 +31,8 @@ const ZONE_LABEL: Record<SlotView["zone"], string> = {
   top: "Top",
   driver: "Driver side",
   passenger: "Passenger side",
+  wheels: "Wheels",
+  interior: "Interior",
 };
 
 export function SlotDialog({ slot, devMode, onClose }: Props) {

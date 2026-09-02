@@ -119,13 +119,14 @@ function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
       <OrbitControls
         ref={controls}
         makeDefault
-        target={[0, 0.95, 0]}
+        target={[-0.3, 1.1, 0]}
         enablePan={false}
-        minDistance={4.5}
+        minDistance={0.35}
         maxDistance={18}
         minPolarAngle={0.25}
         maxPolarAngle={Math.PI / 2 - 0.04}
         rotateSpeed={0.55}
+        zoomSpeed={1.6}
         autoRotate
         autoRotateSpeed={0.5}
         onStart={() => {
@@ -143,7 +144,7 @@ export function CarScene(props: Props) {
     <Canvas
       shadows={{ type: THREE.PCFShadowMap }}
       dpr={[1, 2]}
-      camera={{ position: [7.6, 3.1, 7.3], fov: 35, near: 0.1, far: 60 }}
+      camera={{ position: [7.6, 3.1, 7.3], fov: 35, near: 0.05, far: 60 }}
       gl={{ antialias: true, powerPreference: "high-performance", toneMappingExposure: 1.25 }}
       className="touch-none"
     >
