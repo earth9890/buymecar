@@ -175,9 +175,9 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
       />
 
       {/* ================= HERO ================= */}
-      <section ref={heroRef} className="relative h-[calc(100dvh-3.5rem)] min-h-[600px] w-full overflow-hidden scroll-mt-14">
-        {/* On wide screens push the car right so the headline has room. */}
-        <div className="absolute inset-0 lg:left-[10%]" onPointerDown={() => setWheelZoom(true)}>
+      {/* Stacked on phones (car above the copy), a full-viewport overlay on desktop. */}
+      <section ref={heroRef} className="relative w-full scroll-mt-14 lg:h-[calc(100dvh-3.5rem)] lg:min-h-[640px] lg:overflow-hidden">
+        <div className="relative h-[54dvh] min-h-[340px] lg:absolute lg:inset-0 lg:left-[10%] lg:h-auto" onPointerDown={() => setWheelZoom(true)}>
           <CarScene
             slots={data.slots}
             selectedId={selectedId}
@@ -192,7 +192,7 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
         </div>
 
         {!ready && (
-          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#07080b]">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex h-[54dvh] min-h-[340px] items-center justify-center bg-[#07080b] lg:inset-0 lg:h-auto">
             <div className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" /> Rolling the G63 out of the garage…
             </div>
@@ -226,10 +226,10 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
         </div>
 
         {/* bottom overlay */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-[#07080b] via-[#07080b]/60 to-transparent pb-5 pt-24">
+        <div className="pointer-events-none relative z-10 pb-6 pt-4 lg:absolute lg:inset-x-0 lg:bottom-0 lg:bg-gradient-to-t lg:from-[#07080b] lg:via-[#07080b]/60 lg:to-transparent lg:pb-5 lg:pt-24">
           <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="pointer-events-auto max-w-xl">
-              <h1 className="font-heading text-3xl font-bold leading-[1.05] tracking-tight sm:text-5xl">
+              <h1 className="font-heading text-3xl font-bold leading-[1.05] tracking-tight sm:text-4xl lg:text-5xl">
                 Your brand on my <span className="text-gold">future G63</span>.
               </h1>
               <p className="mt-3 max-w-lg text-sm text-muted-foreground sm:text-base">
@@ -283,7 +283,9 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
                   )}
                 </div>
               </div>
-              <ViewBar active={activePreset} onPreset={onPreset} onZoom={onZoom} />
+              <div className="max-w-full overflow-x-auto">
+                <ViewBar active={activePreset} onPreset={onPreset} onZoom={onZoom} />
+              </div>
             </div>
           </div>
         </div>

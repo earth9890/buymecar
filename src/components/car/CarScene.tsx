@@ -74,7 +74,19 @@ function CameraRig({
   controls: React.RefObject<OrbitControlsImpl | null>;
   placements: Record<string, SnappedPlacement>;
 }) {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
+  // Narrow viewports (phones) get a tighter initial frame so the car fills the width.
+  const framed = useRef(false);
+  useEffect(() => {
+    if (framed.current || !controls.current) return;
+    framed.current = true;
+    const aspect = size.width / Math.max(1, size.height);
+    if (aspect < 1) {
+      const k = 0.78;
+      camera.position.set(...(PRESETS.hero.position.map((v) => v * k) as [number, number, number]));
+      controls.current.update();
+    }
+  }, [camera, controls, size.width, size.height]);
   const anim = useRef<{ from: THREE.Vector3; to: THREE.Vector3; tFrom: THREE.Vector3; tTo: THREE.Vector3; t: number; dur: number } | null>(null);
   const lastNonce = useRef(0);
 
