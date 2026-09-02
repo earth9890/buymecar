@@ -119,7 +119,7 @@ function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
       <OrbitControls
         ref={controls}
         makeDefault
-        target={[-0.3, 1.1, 0]}
+        target={[0.05, 1.2, 0]}
         enablePan={false}
         minDistance={0.35}
         maxDistance={18}
