@@ -93,6 +93,10 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
         </div>
         <div className="hidden rounded-xl border bg-background/70 px-3 py-2 text-xs text-muted-foreground backdrop-blur sm:block">
           {data.devMode ? "Dev mode: payments are simulated" : "Secure checkout by Dodo Payments"}
+          <span className="mx-1.5 opacity-50">·</span>
+          <a href="https://sketchfab.com" target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:underline">
+            3D model via Sketchfab
+          </a>
         </div>
       </div>
 

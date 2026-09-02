@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState, type ComponentRef } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import {
@@ -13,7 +13,12 @@ import {
 } from "@react-three/drei";
 import type { SlotView } from "@/lib/types";
 import { GWagon } from "./GWagon";
+import { GltfCar } from "./GltfCar";
 import { SlotDecal } from "./SlotDecal";
+import { snapSlotsToCar } from "./snap";
+
+const MODEL_URL = process.env.NEXT_PUBLIC_CAR_MODEL_URL ?? "/models/g63.glb";
+const USE_GLTF = MODEL_URL !== "procedural";
 
 interface Props {
   slots: SlotView[];
@@ -34,6 +39,21 @@ function Ready({ onReady }: { onReady?: () => void }) {
 
 function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [car, setCar] = useState<THREE.Object3D | null>(null);
+  const onCarLoaded = useCallback((root: THREE.Object3D) => setCar(root), []);
+  // Decals follow the real mesh: re-snap when the car or slot list changes.
+  const snapped = useMemo(() => {
+    if (!car) return {};
+    const result = snapSlotsToCar(car, slots);
+    if (process.env.NODE_ENV !== "production") {
+      console.debug("[buymecar] snapped", Object.keys(result).length, "of", slots.length, "slots", result);
+    }
+    return result;
+  }, [car, slots]);
+  const placed = useMemo(
+    () => slots.map((s) => (snapped[s.id] ? { ...s, position: snapped[s.id] } : s)),
+    [slots, snapped],
+  );
   useCursor(hoveredId !== null);
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
 
@@ -59,19 +79,19 @@ function Scene({ slots, selectedId, onSelect, onHover, onReady }: Props) {
         shadow-bias={-0.0003}
       />
       <spotLight position={[-6, 7, -5]} angle={0.6} penumbra={0.8} intensity={120} color="#9fb4ff" />
-      <pointLight position={[0, 3, 8]} intensity={40} color="#ffe6c8" />
+      <pointLight position={[0, 3, 8]} intensity={40} color="#dfe6f5" />
       {/* Studio softboxes baked into an env map: no network fetch, sharp reflections on the paint */}
       <Environment resolution={512}>
         <Lightformer form="rect" intensity={3.5} position={[0, 6, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[10, 4, 1]} />
         <Lightformer form="rect" intensity={2.5} position={[-7, 3, 0]} rotation={[0, Math.PI / 2, 0]} scale={[8, 2.5, 1]} color="#9fb4ff" />
         <Lightformer form="rect" intensity={2.5} position={[7, 3, 0]} rotation={[0, -Math.PI / 2, 0]} scale={[8, 2.5, 1]} />
         <Lightformer form="ring" intensity={3} position={[0, 2, -8]} scale={[4, 4, 1]} color="#ffffff" />
-        <Lightformer form="rect" intensity={1.5} position={[0, 1.5, 8]} rotation={[0, Math.PI, 0]} scale={[8, 2, 1]} color="#ffe6c8" />
+        <Lightformer form="rect" intensity={1.5} position={[0, 1.5, 8]} rotation={[0, Math.PI, 0]} scale={[8, 2, 1]} color="#e8edf7" />
       </Environment>
 
       <group>
-        <GWagon />
-        {slots.map((s) => (
+        {USE_GLTF ? <GltfCar url={MODEL_URL} onLoaded={onCarLoaded} /> : <GWagon />}
+        {placed.map((s) => (
           <SlotDecal
             key={s.id}
             slot={s}
