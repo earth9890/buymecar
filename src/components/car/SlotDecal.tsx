@@ -56,6 +56,8 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
         onPointerOut={() => onHover(null)}
         onClick={(e: ThreeEvent<MouseEvent>) => {
           e.stopPropagation();
+          // Ignore "clicks" that were really the end of an orbit drag.
+          if (e.delta > 6) return;
           onSelect(slot.id);
         }}
       >
@@ -65,8 +67,9 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
           opacity={owned ? 1 : active ? 0.55 : 0.2}
           emissive={color}
           emissiveIntensity={active ? (owned ? 0.5 : 0.35) : owned ? 0.12 : 0.04}
-          roughness={0.55}
-          metalness={0.1}
+          roughness={0.9}
+          metalness={0}
+          envMapIntensity={0.25}
           side={THREE.FrontSide}
         />
       </mesh>
