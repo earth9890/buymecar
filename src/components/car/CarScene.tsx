@@ -75,12 +75,18 @@ function CameraRig({
   placements: Record<string, SnappedPlacement>;
 }) {
   const { camera, size } = useThree();
-  // Narrow viewports (phones) get a tighter initial frame so the car fills the width.
+  // Narrow viewports (phones) get a tighter initial frame so the car fills the
+  // width. Wide viewports shift the projection right so the headline has room
+  // without leaving a seam where the canvas would otherwise start.
   const framed = useRef(false);
   useEffect(() => {
+    const aspect = size.width / Math.max(1, size.height);
+    if (camera instanceof THREE.PerspectiveCamera) {
+      if (aspect > 1.3) camera.setViewOffset(size.width, size.height, -size.width * 0.1, 0, size.width, size.height);
+      else camera.clearViewOffset();
+    }
     if (framed.current || !controls.current) return;
     framed.current = true;
-    const aspect = size.width / Math.max(1, size.height);
     if (aspect < 1) {
       const k = 0.78;
       camera.position.set(...(PRESETS.hero.position.map((v) => v * k) as [number, number, number]));

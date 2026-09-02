@@ -177,7 +177,7 @@ export function BuyMeCarApp({ initial }: { initial: SlotsPayload }) {
       {/* ================= HERO ================= */}
       {/* Stacked on phones (car above the copy), a full-viewport overlay on desktop. */}
       <section ref={heroRef} className="relative w-full scroll-mt-14 lg:h-[calc(100dvh-3.5rem)] lg:min-h-[640px] lg:overflow-hidden">
-        <div className="relative h-[54dvh] min-h-[340px] lg:absolute lg:inset-0 lg:left-[10%] lg:h-auto" onPointerDown={() => setWheelZoom(true)}>
+        <div className="relative h-[54dvh] min-h-[340px] lg:absolute lg:inset-0 lg:h-auto" onPointerDown={() => setWheelZoom(true)}>
           <CarScene
             slots={data.slots}
             selectedId={selectedId}
