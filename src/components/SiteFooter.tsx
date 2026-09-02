@@ -7,9 +7,6 @@ export function SiteFooter({ devMode }: { devMode: boolean }) {
           {devMode ? "payments simulated in dev mode" : "payments by Dodo Payments"}.
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1">
-          <a href="https://sketchfab.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">
-            3D model via Sketchfab
-          </a>
           <a href="https://outbid.lol" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">
             Inspired by outbid.lol
           </a>
