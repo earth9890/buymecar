@@ -6,8 +6,8 @@ import { Canvas } from "@react-three/fiber";
 import {
   ContactShadows,
   Environment,
-  Grid,
   Lightformer,
+  MeshReflectorMaterial,
   OrbitControls,
   useCursor,
 } from "@react-three/drei";
@@ -37,21 +37,26 @@ function Scene({ slots, selectedId, onSelect, onHover }: Props) {
       <color attach="background" args={["#07080b"]} />
       <fog attach="fog" args={["#07080b", 14, 30]} />
 
-      <ambientLight intensity={1.0} />
-      <hemisphereLight args={["#9db0e0", "#1a1f2a", 1.2] } />
-      <directionalLight
-        position={[6, 9, 4]}
-        intensity={3.2}
+      <ambientLight intensity={0.6} />
+      <hemisphereLight args={["#aebfe6", "#14171f", 0.8]} />
+      <spotLight
+        position={[5, 9, 4]}
+        angle={0.5}
+        penumbra={0.6}
+        intensity={260}
         castShadow
         shadow-mapSize={[2048, 2048]}
-        shadow-bias={-0.0004}
+        shadow-bias={-0.0003}
       />
-      <directionalLight position={[-7, 5, -5]} intensity={1.4} color="#9fb4ff" />
-      <directionalLight position={[0, 4, 9]} intensity={1.0} color="#ffe6c8" />
-      <Environment resolution={256}>
-        <Lightformer form="rect" intensity={5} position={[0, 6, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[8, 3, 1]} />
-        <Lightformer form="rect" intensity={1.2} position={[-6, 3, 0]} rotation={[0, Math.PI / 2, 0]} scale={[6, 2, 1]} color="#9fb4ff" />
-        <Lightformer form="rect" intensity={1.2} position={[6, 3, 0]} rotation={[0, -Math.PI / 2, 0]} scale={[6, 2, 1]} />
+      <spotLight position={[-6, 7, -5]} angle={0.6} penumbra={0.8} intensity={120} color="#9fb4ff" />
+      <pointLight position={[0, 3, 8]} intensity={40} color="#ffe6c8" />
+      {/* Studio softboxes baked into an env map: no network fetch, sharp reflections on the paint */}
+      <Environment resolution={512}>
+        <Lightformer form="rect" intensity={6} position={[0, 6, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[10, 4, 1]} />
+        <Lightformer form="rect" intensity={2.5} position={[-7, 3, 0]} rotation={[0, Math.PI / 2, 0]} scale={[8, 2.5, 1]} color="#9fb4ff" />
+        <Lightformer form="rect" intensity={2.5} position={[7, 3, 0]} rotation={[0, -Math.PI / 2, 0]} scale={[8, 2.5, 1]} />
+        <Lightformer form="ring" intensity={3} position={[0, 2, -8]} scale={[4, 4, 1]} color="#ffffff" />
+        <Lightformer form="rect" intensity={1.5} position={[0, 1.5, 8]} rotation={[0, Math.PI, 0]} scale={[8, 2, 1]} color="#ffe6c8" />
       </Environment>
 
       <group>
@@ -68,20 +73,37 @@ function Scene({ slots, selectedId, onSelect, onHover }: Props) {
         ))}
       </group>
 
-      <ContactShadows position={[0, 0.002, 0]} opacity={0.75} scale={14} blur={2.4} far={2.5} color="#000000" />
-      <Grid
-        position={[0, 0.001, 0]}
-        args={[40, 40]}
-        cellSize={0.5}
-        cellThickness={0.6}
-        cellColor="#1b2030"
-        sectionSize={2.5}
-        sectionThickness={1}
-        sectionColor="#2c3548"
-        fadeDistance={22}
-        fadeStrength={1.5}
-        infiniteGrid
-      />
+      {/* showroom floor */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+        <circleGeometry args={[30, 96]} />
+        <MeshReflectorMaterial
+          blur={[400, 120]}
+          resolution={1024}
+          mixBlur={1}
+          mixStrength={30}
+          roughness={0.9}
+          depthScale={1.1}
+          minDepthThreshold={0.4}
+          maxDepthThreshold={1.3}
+          color="#0a0c11"
+          metalness={0.6}
+          mirror={0}
+        />
+      </mesh>
+      <ContactShadows position={[0, 0.003, 0]} opacity={0.9} scale={14} blur={2.2} far={2.5} color="#000000" />
+      {/* parking-spot lines under the car */}
+      <group position={[0, 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        {[1.35, -1.35].map((z) => (
+          <mesh key={z} position={[0, z, 0]}>
+            <planeGeometry args={[5.6, 0.06]} />
+            <meshBasicMaterial color="#2a3142" />
+          </mesh>
+        ))}
+        <mesh position={[-2.8, 0, 0]}>
+          <planeGeometry args={[0.06, 2.76]} />
+          <meshBasicMaterial color="#2a3142" />
+        </mesh>
+      </group>
 
       <OrbitControls
         ref={controls}
@@ -108,7 +130,7 @@ export function CarScene(props: Props) {
     <Canvas
       shadows={{ type: THREE.PCFShadowMap }}
       dpr={[1, 2]}
-      camera={{ position: [6.8, 3.0, 6.4], fov: 38, near: 0.1, far: 60 }}
+      camera={{ position: [6.4, 2.6, 6.2], fov: 36, near: 0.1, far: 60 }}
       gl={{ antialias: true, powerPreference: "high-performance", toneMappingExposure: 1.25 }}
       className="touch-none"
     >

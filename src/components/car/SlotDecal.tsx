@@ -23,7 +23,14 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
   const textColor = owned ? readableTextColor(color) : "#ffffff";
   const thin = h <= 0.22;
 
-  const edges = useMemo(() => new THREE.EdgesGeometry(new THREE.PlaneGeometry(w, h)), [w, h]);
+  const circle = slot.shape === "circle";
+  const geometry = useMemo(
+    () => (circle ? new THREE.CircleGeometry(w / 2, 48) : new THREE.PlaneGeometry(w, h)),
+    [circle, w, h],
+  );
+  const edges = useMemo(() => new THREE.EdgesGeometry(geometry, circle ? 1 : 1), [geometry, circle]);
+  // Text has to fit inside the inscribed square of a circle.
+  const tw = circle ? w * 0.72 : w;
 
   const primary = owned ? slot.owner!.brandName.toUpperCase() : "AVAILABLE";
   const secondary = owned
@@ -33,14 +40,15 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
   // Font sizing: fit the primary line to the panel width, capped by height.
   const primarySize = thin
     ? h * 0.62
-    : Math.min(h * 0.34, (w * 1.55) / Math.max(primary.length, 5));
-  const secondarySize = thin ? h * 0.5 : Math.min(h * 0.2, (w * 1.4) / Math.max(secondary.length, 8));
+    : Math.min(h * 0.34, (tw * 1.3) / Math.max(primary.length, 5));
+  const secondarySize = thin ? h * 0.5 : Math.min(h * 0.2, (tw * 1.3) / Math.max(secondary.length, 8));
 
   const active = hovered || selected;
 
   return (
     <group position={slot.position} rotation={slot.rotation}>
       <mesh
+        geometry={geometry}
         onPointerOver={(e: ThreeEvent<PointerEvent>) => {
           e.stopPropagation();
           onHover(slot.id);
@@ -51,7 +59,6 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
           onSelect(slot.id);
         }}
       >
-        <planeGeometry args={[w, h]} />
         <meshStandardMaterial
           color={color}
           transparent={!owned}
@@ -60,20 +67,19 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
           emissiveIntensity={active ? (owned ? 0.5 : 0.35) : owned ? 0.12 : 0.04}
           roughness={0.55}
           metalness={0.1}
-          polygonOffset
-          polygonOffsetFactor={-2}
           side={THREE.FrontSide}
         />
       </mesh>
-      <lineSegments geometry={edges} position={[0, 0, 0.002]}>
+      <lineSegments geometry={edges} position={[0, 0, 0.003]}>
         <lineBasicMaterial color={active ? "#ffffff" : owned ? textColor : "#ffffff"} transparent opacity={active ? 1 : 0.55} />
       </lineSegments>
 
       {thin ? (
         <Text
-          position={[0, 0, 0.004]}
+          position={[0, 0, 0.012]}
+          depthOffset={-4}
           fontSize={primarySize}
-          maxWidth={w * 0.95}
+          maxWidth={tw * 0.95}
           anchorX="center"
           anchorY="middle"
           color={textColor}
@@ -84,9 +90,10 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
       ) : (
         <>
           <Text
-            position={[0, h * 0.12, 0.004]}
+            position={[0, h * 0.12, 0.012]}
+            depthOffset={-4}
             fontSize={primarySize}
-            maxWidth={w * 0.92}
+            maxWidth={tw * 0.92}
             anchorX="center"
             anchorY="middle"
             color={textColor}
@@ -96,9 +103,10 @@ export function SlotDecal({ slot, hovered, selected, onHover, onSelect }: Props)
             {primary}
           </Text>
           <Text
-            position={[0, -h * 0.22, 0.004]}
+            position={[0, -h * 0.22, 0.012]}
+            depthOffset={-4}
             fontSize={secondarySize}
-            maxWidth={w * 0.9}
+            maxWidth={tw * 0.9}
             anchorX="center"
             anchorY="middle"
             color={textColor}

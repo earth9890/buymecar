@@ -21,6 +21,8 @@ export interface SlotDef {
   rotation: [number, number, number];
   /** [width, height] of the decal in metres (width = text direction). */
   size: [number, number];
+  /** Round decal (diameter = size[0]); default is a rectangle. */
+  shape?: "circle";
   /** Marketing blurb shown in the buy dialog. */
   pitch: string;
 }
@@ -34,7 +36,7 @@ const FACE_REAR: [number, number, number] = [0, -HALF_PI, 0];
 const FACE_PASSENGER: [number, number, number] = [0, 0, 0];
 const FACE_DRIVER: [number, number, number] = [0, Math.PI, 0];
 
-const SIDE_Z = 0.962;
+const SIDE_Z = 0.968;
 
 export const SLOTS: SlotDef[] = [
   // ---- Premium ----
@@ -55,7 +57,8 @@ export const SLOTS: SlotDef[] = [
     startCents: 35000,
     position: [-2.561, 1.1, 0.3],
     rotation: FACE_REAR,
-    size: [0.62, 0.62],
+    size: [0.66, 0.66],
+    shape: "circle",
     pitch: "The iconic G-Wagon spare. Stares at every driver stuck behind us.",
   },
   {
